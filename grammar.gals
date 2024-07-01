@@ -1,0 +1,234 @@
+#Options
+GenerateScanner = true
+GenerateParser = true
+Language = Java
+ScannerName = Lexico
+ParserName = Sintatico
+SemanticName = Semantico
+Package = gals
+ScannerCaseSensitive = true
+ScannerTable = Compact
+Input = Stream
+Parser = SLR
+#RegularDefinitions
+N: [0-9]
+C: [A-Za-z]
+HC: [A-Fa-f]
+WS: [\ \t\n\r]
+B:["/"]
+A:["*"]
+
+#Tokens
+ID: {C}({C}|{N}|_)*
+:{WS}*
+
+VAR_RW = ID : "var"
+LET_RW = ID : "let"
+CONST_RW = ID : "const"
+INT_RW = ID : "int"
+DOUBLE_RW = ID : "double"
+CHAR_RW = ID : "char"
+STRING_RW = ID : "string"
+IF_RW = ID : "if"
+ELSE_RW = ID : "else"
+BOOLEAN_RW = ID : "boolean"
+BREAK_RW = ID : "break"
+CLASS_RW = ID : "class"
+ENUM_RW = ID : "enum"
+FALSE_RW = ID : "false"
+TRUE_RW = ID : "true"
+FLOAT_RW = ID : "float"
+FOR_RW = ID : "for"
+FUNCTION_RW = ID : "function"
+IMPORT_RW = ID : "import"
+EXPORT_RW = ID : "export"
+IN_RW = ID : "in"
+INSTANCEOF_RW = ID : "instanceof"
+LONG_RW = ID : "long"
+NULL_RW = ID : "null"
+RETURN_RW = ID : "return"
+THROW_RW = ID : "throw"
+TRY_RW = ID : "try"
+CATCH_RW = ID : "catch"
+TYPEOF_RW = ID : "typeof"
+WHILE_RW = ID : "while"
+DO_RW = ID : "do"
+VOID_RW = ID : "void"
+THIS_RW = ID : "this"
+SWITCH_RW = ID : "switch"
+CASE_RW = ID : "case"
+DEFAULT_RW = ID : "default"
+NUMBER_RW = ID : "number"
+READ_RW = ID : "read"
+PRINT_RW = ID : "print"
+
+SUM: \+
+SUBTRACT: \-
+MULTIPLY: \*
+DIVIDE: /
+REMAINDER: %
+EXPONENT: {A}{A}
+
+GREATER: >
+GREATER_OR_EQUAL: >=
+LESS_OR_EQUAL: <=
+LESS: <
+EQUAL: ==
+NOT_EQUAL: !=
+STRICT_EQUAL: ===
+STRICT_NOT_EQUAL: !==
+
+AND: &&
+OR: \|\|
+NOT: !^.
+TERNARY: \?^.
+
+BIT_AND: &
+BIT_OR: \|
+BIT_XOR: \^
+BIT_NOT: ~
+BIT_LS: <<
+BIT_RS: >>
+BIT_FILL_RS: >>>
+
+INT_DECIMAL_VALUE: {N}+
+INT_HEXADECIMAL_VALUE: "0x"({N}*{HC}*)*
+INT_BINARY_VALUE: "0b"(0*1*)*
+FLOAT_VALUE: {N}+\.{N}+
+STRING_VALUE: \"([^\"])*\"
+CHARACTER_VALUE: "'"(.)"'"
+
+COMMENT: {B}{B}[^\n\r]*
+COMMENT_ML: {B}{A}(([^"*""/"]*{WS}*[^"*""/"]*)*)*{A}{B}
+
+ATRIBUTION_OP: =
+END_LINE: ;
+START_PARENTHESES: \(
+END_PARENTHESES: \)
+START_KEYS: \{
+END_KEYS: \}
+START_BRACKETS: \[
+END_BRACKETS: \]
+TYPE: :
+DIVIDER: ,
+ACCESS: \.
+
+
+#NonTerminals
+<start>
+<scope>
+<command_list>
+<command>
+<new_variable>
+<id_array>
+
+<new_function>
+<new_parameters>
+<call_function>
+<call_parameters>
+
+<atribution>
+<atribution_value>
+<read_data>
+<print_data>
+<print_params>
+
+<while>
+<do_while>
+<for>
+<for_init>
+<for_condition>
+<for_after>
+
+<array_declar>
+<array_value_inside>
+<array_declar_v>
+<variable_type>
+
+<value>
+<number_value>
+<new_variable_exp>
+<array_value>
+<array_access>
+<array_access_value>
+<array_position>
+<exp>
+<exp1>
+<exp2>
+<exp3>
+<exp4>
+<exp5>
+<exp6>
+<exp7>
+<exp8>
+<exp9>
+<exp10>
+<op_rel>
+<op_neg>
+<op_bitwise>
+<op_arit_baixa>
+<op_arit_alta>
+<if>
+<else>
+
+#Grammar
+<start>::= #0 <scope> #99; 
+
+<scope>::= <command_list> | î;
+<command_list> ::= <command_list><command> | <command>;
+<command> ::= <new_variable> END_LINE| <if> | <new_function> | <call_function> END_LINE | <atribution> END_LINE | <read_data> | <print_data>
+| <while> | <do_while> | <for>;
+
+<new_variable> ::= <variable_type> #1 <new_variable_exp>;
+<new_variable_exp> ::= <new_variable_exp> ID #2 <array_declar> ATRIBUTION_OP <exp> #3 | <new_variable_exp> ID #2 <array_declar> #4
+ | <new_variable_exp> DIVIDER ID #2 <array_declar> #4 | <new_variable_exp> DIVIDER ID #2 <array_declar> ATRIBUTION_OP <exp> #3 | î;
+<variable_type> ::= VAR_RW | LET_RW | CONST_RW;
+
+<array_declar> ::= START_BRACKETS INT_DECIMAL_VALUE #6 END_BRACKETS | START_BRACKETS END_BRACKETS #7 | î;
+<id_array> ::= ID #5 | ID #21 START_BRACKETS #19 <exp> END_BRACKETS #20; // id or array access
+
+<new_function> ::= FUNCTION_RW #1 ID #9 START_PARENTHESES #0 <new_parameters> END_PARENTHESES START_KEYS <scope> #99 END_KEYS;
+<new_parameters> ::= ID #10 | <new_parameters> DIVIDER ID #10 | <new_parameters> DIVIDER ID #10 ATRIBUTION_OP <value> 
+ | ID #10 ATRIBUTION_OP <value> | î;
+
+<call_function> ::=  ID #5 START_PARENTHESES <call_parameters> END_PARENTHESES;
+<call_parameters> ::= <exp> | <call_parameters> DIVIDER <exp>; 
+
+<atribution> ::= <id_array> #16 ATRIBUTION_OP <exp> #13 | <id_array> SUM SUM #14 | <id_array> SUBTRACT SUBTRACT #15;
+<read_data> ::= READ_RW #17 START_PARENTHESES <id_array> END_PARENTHESES END_LINE;
+<print_data> ::= PRINT_RW #18 START_PARENTHESES <print_params> END_PARENTHESES END_LINE;
+<print_params> ::= <exp> | <print_params> DIVIDER <exp>;
+
+<exp>  ::= <exp> OR #12 <exp1> | <exp1>;
+<exp1> ::= <exp1> AND #12 <exp2> | <exp2>;
+<exp2> ::= <exp2> BIT_OR #12 <exp3> | <exp3>;
+<exp3> ::= <exp3> BIT_XOR #12 <exp4> | <exp4>;
+<exp4> ::= <exp4> BIT_AND #12 <exp5> | <exp5>;
+<exp5> ::= <exp5> <op_rel> #12 <exp6> | <exp6>;
+<exp6> ::= <exp6> <op_bitwise> #12 <exp7> | <exp7>;
+<exp7> ::= <exp7> <op_arit_baixa> #12 <exp8> | <exp8>;
+<exp8> ::= <exp8> <op_arit_alta> #12 <exp9> | <exp9> ;
+<exp9> ::= <op_neg> <exp10> | <exp10>;
+<exp10> ::= <value> #11;
+
+<value> ::= <number_value> | STRING_VALUE | CHARACTER_VALUE | TRUE_RW | FALSE_RW | START_PARENTHESES <exp> END_PARENTHESES | <id_array> | <call_function> | <array_value>;
+<number_value> ::= INT_DECIMAL_VALUE | FLOAT_VALUE;
+<array_value> ::= START_BRACKETS <array_value_inside> END_BRACKETS; // used to init an array
+<array_value_inside> ::= <value> #8 | <value> #8 DIVIDER <array_value_inside>;
+
+<op_rel> ::= GREATER | GREATER_OR_EQUAL | LESS_OR_EQUAL | LESS | EQUAL | NOT_EQUAL | STRICT_EQUAL | STRICT_NOT_EQUAL ; 
+<op_neg> ::=  BIT_NOT | NOT;
+<op_bitwise> ::= BIT_RS | BIT_LS;
+<op_arit_baixa> ::= SUM | SUBTRACT;
+<op_arit_alta> ::= MULTIPLY | DIVIDE | REMAINDER;
+
+<if> ::= IF_RW START_PARENTHESES <exp> END_PARENTHESES START_KEYS #0 <scope> #99 END_KEYS;
+<if> ::= IF_RW START_PARENTHESES <exp> END_PARENTHESES START_KEYS #0 <scope> #99 END_KEYS <else>;
+<else> ::= ELSE_RW START_KEYS #0 <scope> #99 END_KEYS;
+
+<while> ::= WHILE_RW START_PARENTHESES <exp> END_PARENTHESES START_KEYS #0 <scope> #99 END_KEYS;
+<do_while> ::= DO_RW START_KEYS #0 <scope> END_KEYS WHILE_RW START_PARENTHESES <exp> END_PARENTHESES END_LINE;
+<for> ::= FOR_RW START_PARENTHESES #0 <for_init> END_LINE <for_condition> END_LINE <for_after> END_PARENTHESES START_KEYS <scope> #99 END_KEYS;
+<for_init> ::= <new_variable>;
+<for_condition> ::= <exp>;
+<for_after> ::= <atribution>;

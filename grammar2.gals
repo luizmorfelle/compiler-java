@@ -1,0 +1,175 @@
+#Options
+GenerateScanner = true
+GenerateParser = true
+Language = Java
+ScannerName = Lexico
+ParserName = Sintatico
+SemanticName = Semantico
+Package = gals
+ScannerCaseSensitive = true
+ScannerTable = Compact
+Input = Stream
+Parser = SLR
+#RegularDefinitions
+N: [0-9]
+C: [A-Za-z]
+HC: [A-Fa-f]
+WS: [\ \t\n\r]
+B:["/"]
+A:["*"]
+
+#Tokens
+ID: {C}({C}|{N}|_)*
+:{WS}*
+
+VAR_RW = ID : "var"
+LET_RW = ID : "let"
+CONST_RW = ID : "const"
+INT_RW = ID : "int"
+DOUBLE_RW = ID : "double"
+CHAR_RW = ID : "char"
+STRING_RW = ID : "string"
+IF_RW = ID : "if"
+ELSE_RW = ID : "else"
+BOOLEAN_RW = ID : "boolean"
+BREAK_RW = ID : "break"
+CLASS_RW = ID : "class"
+ENUM_RW = ID : "enum"
+FALSE_RW = ID : "false"
+TRUE_RW = ID : "true"
+FLOAT_RW = ID : "float"
+FOR_RW = ID : "for"
+FUNCTION_RW = ID : "function"
+IMPORT_RW = ID : "import"
+EXPORT_RW = ID : "export"
+IN_RW = ID : "in"
+INSTANCEOF_RW = ID : "instanceof"
+LONG_RW = ID : "long"
+NULL_RW = ID : "null"
+RETURN_RW = ID : "return"
+THROW_RW = ID : "throw"
+TRY_RW = ID : "try"
+CATCH_RW = ID : "catch"
+TYPEOF_RW = ID : "typeof"
+WHILE_RW = ID : "while"
+DO_RW = ID : "do"
+VOID_RW = ID : "void"
+THIS_RW = ID : "this"
+SWITCH_RW = ID : "switch"
+CASE_RW = ID : "case"
+DEFAULT_RW = ID : "default"
+NUMBER_RW = ID : "number"
+READ_RW = ID : "read"
+PRINT_RW = ID : "print"
+
+SUM: \+
+SUBTRACT: \-
+MULTIPLY: \*
+DIVIDE: /
+REMAINDER: %
+EXPONENT: {A}{A}
+
+GREATER: >
+GREATER_OR_EQUAL: >=
+LESS_OR_EQUAL: <=
+LESS: <
+EQUAL: ==
+NOT_EQUAL: !=
+STRICT_EQUAL: ===
+STRICT_NOT_EQUAL: !==
+
+AND: &&
+OR: \|\|
+NOT: !^.
+TERNARY: \?^.
+
+BIT_AND: &
+BIT_OR: \|
+BIT_XOR: \^
+BIT_NOT: ~
+BIT_LS: <<
+BIT_RS: >>
+BIT_FILL_RS: >>>
+
+INT_DECIMAL_VALUE: {N}+
+INT_HEXADECIMAL_VALUE: "0x"({N}*{HC}*)*
+INT_BINARY_VALUE: "0b"(0*1*)*
+FLOAT_VALUE: {N}+\.{N}+
+STRING_VALUE: \"([^\"])*\"
+CHARACTER_VALUE: "'"(.)"'"
+
+COMMENT: {B}{B}[^\n\r]*
+COMMENT_ML: {B}{A}(([^"*""/"]*{WS}*[^"*""/"]*)*)*{A}{B}
+
+ATRIBUTION_OP: =
+END_LINE: ;
+START_PARENTHESES: \(
+END_PARENTHESES: \)
+START_KEYS: \{
+END_KEYS: \}
+START_BRACKETS: \[
+END_BRACKETS: \]
+TYPE: :
+DIVIDER: ,
+ACCESS: \.
+
+
+#NonTerminals
+<prog>
+<lista_dec>
+<lista_cmd>
+<dec>
+<cmd>
+<lista_id>
+<id>
+<tipo>
+<exp>
+<exp1>
+<exp2>
+<exp3>
+<r_senao>
+<dec_array>
+<value>
+<incdec>
+<increment>
+<decrement>
+#Grammar
+<prog> ::= <lista_cmd> | î; 
+<lista_cmd> ::= <lista_cmd> <cmd> | <cmd>;
+
+<tipo> ::= VAR_RW | CONST_RW | LET_RW ;
+
+<dec> ::= <tipo> #0 ID #1 #6
+| <tipo> #0 ID #1 ATRIBUTION_OP  <exp1> #6
+| <tipo> #0 ID #1 START_BRACKETS END_BRACKETS #3 #6
+| <tipo> #0 ID #1 START_BRACKETS END_BRACKETS #3 ATRIBUTION_OP START_BRACKETS <dec_array> END_BRACKETS #6
+| <tipo> #0 ID #1 START_BRACKETS <exp1> #4 END_BRACKETS #3 ATRIBUTION_OP START_BRACKETS <dec_array> END_BRACKETS #6 ;
+
+<dec_array> ::= <value> #5 |<value> #5 DIVIDER <dec_array>;
+
+<value> ::= INT_DECIMAL_VALUE | ID;
+
+<cmd> ::= ID #12 ATRIBUTION_OP <exp1> #13
+| <dec>
+| ID #14 START_BRACKETS <exp1> #15 END_BRACKETS ATRIBUTION_OP <exp1> #16
+| IF_RW START_PARENTHESES <exp> END_PARENTHESES #22 START_KEYS <prog> END_KEYS #24  <r_senao> 
+| IF_RW START_PARENTHESES <exp> END_PARENTHESES #22 START_KEYS <prog> END_KEYS #23
+| WHILE_RW START_PARENTHESES #26  <exp> END_PARENTHESES #22 START_KEYS <prog> END_KEYS #27 
+| DO_RW #26 START_KEYS <prog> END_KEYS WHILE_RW START_PARENTHESES <exp> END_PARENTHESES #28
+| FOR_RW START_PARENTHESES <dec> END_LINE #26 <exp> #22 END_LINE <incdec> END_PARENTHESES START_KEYS <prog> END_KEYS #27
+| READ_RW START_PARENTHESES ID #18 END_PARENTHESES
+| READ_RW START_PARENTHESES ID START_BRACKETS <exp1>  END_BRACKETS END_PARENTHESES
+| PRINT_RW START_PARENTHESES <exp1> #19 END_PARENTHESES ;
+
+<r_senao> ::= ELSE_RW START_KEYS <prog> END_KEYS #25;
+
+<incdec> ::= <increment> | <decrement>;
+<increment> ::= ID #30 SUM SUM;
+<decrement> ::= ID #31 SUBTRACT SUBTRACT;
+
+<exp> ::= <exp> GREATER #20 <exp1> #21 | <exp> LESS #20 <exp1>#21 | <exp> GREATER_OR_EQUAL #20 <exp1>#21| <exp> LESS_OR_EQUAL #20 <exp1>#21
+| <exp> NOT_EQUAL #20 <exp1>#21| <exp> EQUAL #20 <exp1>#21| <exp1> ;
+
+<exp1> ::= <exp1> SUM #9 <exp2> #8 | <exp1> SUBTRACT #9 <exp2> #8 | <exp2> #7;
+
+<exp2> ::=  INT_DECIMAL_VALUE #2 | ID #10 #2 | ID #11 START_BRACKETS <exp1> END_BRACKETS ;
